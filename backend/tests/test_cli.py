@@ -202,6 +202,7 @@ def test_main_handles_known_error(monkeypatch: pytest.MonkeyPatch) -> None:
         raise CommitReviewerError("nope")
 
     monkeypatch.setattr(cli, "run", boom)
+    monkeypatch.setattr(cli, "_configure_logging", lambda log_file: None)
     assert cli.main([]) == 1
 
 

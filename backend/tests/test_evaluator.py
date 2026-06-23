@@ -9,6 +9,10 @@
         a valid structured-JSON response is validated into an
         Evaluation with the right rating and reasoning.
 
+    Lenient parsing
+        a response whose string values contain raw control characters
+        (tabs/newlines) still parses instead of failing validation.
+
     Contract
         the strict RESPONSE_FORMAT schema is forwarded on every call.
 
@@ -73,6 +77,23 @@ def test_valid_response_parsed() -> None:
 
 
 # end: Happy path
+
+
+# ======================================================================
+# CATEGORY: Lenient parsing
+# ======================================================================
+
+
+def test_response_with_control_characters_is_tolerated() -> None:
+    # Raw tab and newline inside the reasoning string would break a strict
+    # JSON reader; the evaluator parses it in non-strict mode instead.
+    client = FakeClient(['{"rating":"good","reasoning":"line one\tline\ntwo"}'])
+    [evaluation] = LLMCommitEvaluator(client, max_retries=0).evaluate([_commit()])
+    assert evaluation.rating is Rating.GOOD
+    assert "line one" in evaluation.reasoning
+
+
+# end: Lenient parsing
 
 
 # ======================================================================

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from .models import Mode
 
@@ -17,6 +18,7 @@ class CliConfig:
     port: int
     model: str
     serve: bool
+    log_file: Path | None = None
 
     @property
     def url(self) -> str | None:

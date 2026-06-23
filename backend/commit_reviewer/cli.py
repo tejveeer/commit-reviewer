@@ -8,16 +8,18 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from . import DEFAULT_COMMIT_COUNT, DEFAULT_PORT, OPENROUTER_MODEL, __version__
+from . import DEFAULT_COMMIT_COUNT, DEFAULT_PORT, OPENROUTER_MODEL, __version__, console
 from .collector import CommitCollector
 from .config import CliConfig
 from .errors import CommitReviewerError
 from .evaluator import LLMCommitEvaluator
-from .models import Mode, Report, ReviewedCommit
+from .models import Commit, Evaluation, Mode, Report, ReviewedCommit
 from .openrouter import OpenRouterClient
 from .report import default_web_root, serve, write_report
 
 logger = logging.getLogger("commit_reviewer")
+
+DEFAULT_LOG_FILENAME = "commit-reviewer.log"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -58,6 +60,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Write the JSON report but do not start the report server.",
     )
     parser.add_argument(
+        "--log-file",
+        metavar="PATH",
+        default=None,
+        help=(
+            "Where to write developer logs "
+            f"(default: ./{DEFAULT_LOG_FILENAME} in the current directory)."
+        ),
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -75,6 +86,12 @@ def parse_args(argv: list[str] | None = None) -> CliConfig:
     mode = Mode.REMOTE if args.url else Mode.LOCAL
     target = args.url if args.url else "."
 
+    log_file = (
+        Path(args.log_file).resolve()
+        if args.log_file
+        else Path.cwd() / DEFAULT_LOG_FILENAME
+    )
+
     return CliConfig(
         mode=mode,
         target=target,
@@ -82,6 +99,7 @@ def parse_args(argv: list[str] | None = None) -> CliConfig:
         port=args.port,
         model=args.model,
         serve=not args.no_serve,
+        log_file=log_file,
     )
 
 
@@ -109,6 +127,7 @@ def run(
         repo,
         config.mode.value,
     )
+    console.print_header(repo, config.mode, config.count)
 
     collector = collector or CommitCollector()
     commits = collector.collect(config)
@@ -116,9 +135,13 @@ def run(
     reviewed: list[ReviewedCommit] = []
     if not commits:
         logger.warning("No commits found to review.")
+        console.print_note("No commits found to review.")
     else:
         if evaluator is None:
-            evaluator = LLMCommitEvaluator(OpenRouterClient(model=config.model))
+            evaluator = LLMCommitEvaluator(
+                OpenRouterClient(model=config.model),
+                on_result=_print_result,
+            )
         evaluations = evaluator.evaluate(commits)
         reviewed = [
             ReviewedCommit.from_parts(commit, evaluation)
@@ -140,16 +163,32 @@ def run(
         summary.bad,
     )
 
+    served_url = f"http://localhost:{config.port}/" if config.serve else None
+    console.print_summary(summary, path, served_url, config.log_file)
+
     if config.serve:
         serve(out_dir, config.port)
     return 0
 
 
-def _configure_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
+def _print_result(
+    index: int, total: int, commit: Commit, evaluation: Evaluation
+) -> None:
+    console.print_result(index, total, commit.short_sha, commit.subject, evaluation)
+
+
+def _configure_logging(log_file: Path) -> None:
+    """Send all logging (ours plus httpx) to a file, keeping the terminal clean."""
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    for handler in list(root.handlers):
+        root.removeHandler(handler)
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
     )
+    root.addHandler(file_handler)
 
 
 def _load_env(project_root: Path | None = None) -> None:
@@ -169,12 +208,14 @@ def _load_env(project_root: Path | None = None) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     _load_env()
-    _configure_logging()
     config = parse_args(argv)
+    if config.log_file is not None:
+        _configure_logging(config.log_file)
     try:
         return run(config)
     except CommitReviewerError as exc:
         logger.error("Error: %s", exc)
+        console.print_error(f"Error: {exc}")
         return 1
 
 

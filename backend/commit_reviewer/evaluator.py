@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import time
+from collections.abc import Callable
 from typing import Any
 
 from pydantic import ValidationError
@@ -13,6 +15,9 @@ from .models import Commit, Evaluation, Rating
 from .openrouter import ChatClient
 
 logger = logging.getLogger("commit_reviewer")
+
+#: Called once per commit as soon as its evaluation is ready (for live output).
+ResultCallback = Callable[[int, int, Commit, Evaluation], None]
 
 #: Structured-output contract: the model MUST return exactly this JSON shape.
 RESPONSE_FORMAT: dict[str, Any] = {
@@ -61,27 +66,34 @@ class LLMCommitEvaluator:
         max_retries: int = 2,
         backoff_base: float = 0.5,
         sleep: Any = time.sleep,
+        on_result: ResultCallback | None = None,
     ) -> None:
         self._client = client
         self._max_retries = max_retries
         self._backoff_base = backoff_base
         self._sleep = sleep
+        self._on_result = on_result
 
     def evaluate(self, commits: list[Commit]) -> list[Evaluation]:
-        """Evaluate each commit, logging results to the terminal."""
+        """Evaluate each commit, logging to file and streaming results out."""
         evaluations: list[Evaluation] = []
         total = len(commits)
         for index, commit in enumerate(commits, start=1):
+            started = time.perf_counter()
             evaluation = self._evaluate_one(commit)
+            elapsed = time.perf_counter() - started
             evaluations.append(evaluation)
             logger.info(
-                "[%d/%d] %s  %-9s  %s",
+                "[%d/%d] %s  %-9s  (%.2fs)  %s",
                 index,
                 total,
                 commit.short_sha,
                 evaluation.rating.value.upper(),
+                elapsed,
                 evaluation.reasoning,
             )
+            if self._on_result is not None:
+                self._on_result(index, total, commit, evaluation)
         return evaluations
 
     def _evaluate_one(self, commit: Commit) -> Evaluation:
@@ -93,7 +105,7 @@ class LLMCommitEvaluator:
                 content = self._client.complete(
                     SYSTEM_PROMPT, user_prompt, response_format=RESPONSE_FORMAT
                 )
-                return Evaluation.model_validate_json(content)
+                return self._parse(content)
             except (EvaluatorError, ValidationError, ValueError) as exc:
                 last_error = exc
                 if attempt < self._max_retries:
@@ -117,6 +129,18 @@ class LLMCommitEvaluator:
             rating=Rating.BAD,
             reasoning=f"Could not evaluate this commit (LLM error: {last_error}).",
         )
+
+    @staticmethod
+    def _parse(content: str) -> Evaluation:
+        """Validate the model output, tolerating raw control characters.
+
+        The free model frequently returns otherwise-valid JSON with literal
+        tabs/newlines inside string values. pydantic's strict JSON reader
+        rejects those, so we parse with the standard library in non-strict
+        mode (which allows control characters) and then validate the object.
+        """
+        data = json.loads(content, strict=False)
+        return Evaluation.model_validate(data)
 
     @staticmethod
     def _build_user_prompt(commit: Commit) -> str:
