@@ -23,7 +23,7 @@ export function Header({ report, dark, toggle }: HeaderProps) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95"
+      className="mb-4 border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95"
     >
       <div className="mx-auto flex max-w-5xl items-start justify-between gap-2 px-3 py-2">
         <div className="min-w-0">
@@ -38,10 +38,10 @@ export function Header({ report, dark, toggle }: HeaderProps) {
             {report.repo}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300">
+            <span className="rounded-md border border-teal-200 bg-teal-50 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300">
               {report.mode}
             </span>
-            <span className="rounded border border-coral-200 bg-coral-50 px-1.5 py-0.5 font-mono text-coral-700 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-300">
+            <span className="rounded-md border border-coral-200 bg-coral-50 px-1.5 py-0.5 font-mono text-coral-700 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-300">
               {report.model}
             </span>
             <span className="text-slate-400 dark:text-slate-500">

@@ -24,7 +24,7 @@ export function Filters({ filter, setFilter, search, setSearch }: FiltersProps) 
               key={chip}
               type="button"
               onClick={() => setFilter(chip)}
-              className={`cursor-pointer rounded-md border px-2 py-1 text-xs font-semibold transition-colors ${
+              className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-semibold transition-colors ${
                 active
                   ? "border-teal-500 bg-teal-500 text-white"
                   : "border-slate-200 bg-white text-slate-600 hover:border-teal-400 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500 dark:hover:text-teal-400"
@@ -41,7 +41,7 @@ export function Filters({ filter, setFilter, search, setSearch }: FiltersProps) 
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search message or SHA..."
-        className="ml-auto w-full max-w-xs rounded-md border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+        className="ml-auto w-full max-w-xs rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
       />
     </section>
   );

@@ -20,20 +20,18 @@ export function CommitRow({ commit }: { commit: ReviewedCommit }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="border border-slate-200 bg-white p-2 transition-colors hover:border-teal-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-700"
+      onClick={expandable ? () => setOpen((o) => !o) : undefined}
+      className={`rounded-sm border border-slate-200 bg-white p-2 transition-colors hover:border-teal-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-700 ${
+        expandable ? "cursor-pointer" : ""
+      }`}
     >
       <div className="flex items-start gap-2">
-        <code className="mt-0.5 rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-teal-700 dark:bg-slate-800 dark:text-teal-300">
+        <code className="mt-0.5 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-teal-700 dark:bg-slate-800 dark:text-teal-300">
           {commit.sha.slice(0, 7)}
         </code>
 
         <div className="min-w-0 flex-1">
-          <div
-            className={`flex items-start justify-between gap-2 ${
-              expandable ? "cursor-pointer" : ""
-            }`}
-            onClick={expandable ? () => setOpen((o) => !o) : undefined}
-          >
+          <div className="flex items-start justify-between gap-2">
             <p className="min-w-0 font-medium text-slate-900 dark:text-slate-100">
               {subject}
               {expandable && (

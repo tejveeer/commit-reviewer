@@ -22,7 +22,7 @@ export default function App() {
       if (!query) return true;
       return (
         commit.message.toLowerCase().includes(query) ||
-        commit.sha.toLowerCase().includes(query)
+        commit.sha.toLowerCase().startsWith(query)
       );
     });
   }, [state, filter, search]);
