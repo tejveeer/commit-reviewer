@@ -152,13 +152,16 @@ def _configure_logging() -> None:
     )
 
 
-def _load_env() -> None:
+def _load_env(project_root: Path | None = None) -> None:
     """Load the API key from .env regardless of the directory being reviewed.
 
     An already-exported OPENROUTER_API_KEY always takes precedence (load_dotenv
-    does not override existing environment variables).
+    does not override existing environment variables). ``project_root`` is exposed
+    for testing; in normal use it defaults to the repository root.
     """
-    project_env = Path(__file__).resolve().parents[2] / ".env"
+    if project_root is None:
+        project_root = Path(__file__).resolve().parents[2]
+    project_env = project_root / ".env"
     if project_env.is_file():
         load_dotenv(project_env)
     load_dotenv()
