@@ -9,3 +9,7 @@ class CommitReviewerError(Exception):
 
 class CollectorError(CommitReviewerError):
     """Raised when commits cannot be collected from a repository."""
+
+
+class EvaluatorError(CommitReviewerError):
+    """Raised when the LLM evaluation cannot be performed (config or transport)."""

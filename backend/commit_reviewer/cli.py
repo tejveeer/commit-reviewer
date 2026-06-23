@@ -3,26 +3,21 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
+import logging
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from . import DEFAULT_COMMIT_COUNT, DEFAULT_PORT, OPENROUTER_MODEL, __version__
-from .models import Mode
+from .collector import CommitCollector
+from .config import CliConfig
+from .errors import CommitReviewerError
+from .evaluator import LLMCommitEvaluator
+from .models import Mode, Report, ReviewedCommit
+from .openrouter import OpenRouterClient
+from .report import default_web_root, serve, write_report
 
-
-@dataclass(frozen=True)
-class CliConfig:
-    """Resolved options for a single run."""
-
-    mode: Mode
-    target: str
-    count: int
-    port: int
-    model: str
-    serve: bool
-
-    @property
-    def url(self) -> str | None:
-        return self.target if self.mode is Mode.REMOTE else None
+logger = logging.getLogger("commit_reviewer")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -90,16 +85,94 @@ def parse_args(argv: list[str] | None = None) -> CliConfig:
     )
 
 
-def run(config: CliConfig) -> int:
-    """Execute the pipeline. Wired up fully in a later ticket."""
-    raise NotImplementedError(
-        "The review pipeline is implemented in a subsequent ticket."
+def _repo_label(config: CliConfig) -> str:
+    if config.mode is Mode.REMOTE and config.url is not None:
+        return config.url
+    return str(Path(config.target).resolve())
+
+
+def run(
+    config: CliConfig,
+    *,
+    collector: CommitCollector | None = None,
+    evaluator: LLMCommitEvaluator | None = None,
+) -> int:
+    """Collect commits, evaluate them, write the JSON report, and serve it.
+
+    ``collector`` and ``evaluator`` can be injected for testing; by default the
+    real git collector and OpenRouter-backed evaluator are used.
+    """
+    repo = _repo_label(config)
+    logger.info(
+        "Reviewing up to %d commit(s) from %s [%s]",
+        config.count,
+        repo,
+        config.mode.value,
+    )
+
+    collector = collector or CommitCollector()
+    commits = collector.collect(config)
+
+    reviewed: list[ReviewedCommit] = []
+    if not commits:
+        logger.warning("No commits found to review.")
+    else:
+        if evaluator is None:
+            evaluator = LLMCommitEvaluator(OpenRouterClient(model=config.model))
+        evaluations = evaluator.evaluate(commits)
+        reviewed = [
+            ReviewedCommit.from_parts(commit, evaluation)
+            for commit, evaluation in zip(commits, evaluations, strict=True)
+        ]
+
+    report = Report.build(
+        repo=repo, mode=config.mode, model=config.model, commits=reviewed
+    )
+
+    out_dir = default_web_root()
+    path = write_report(report, out_dir)
+    summary = report.summary
+    logger.info(
+        "Wrote %s (excellent=%d, good=%d, bad=%d)",
+        path,
+        summary.excellent,
+        summary.good,
+        summary.bad,
+    )
+
+    if config.serve:
+        serve(out_dir, config.port)
+    return 0
+
+
+def _configure_logging() -> None:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
     )
 
 
+def _load_env() -> None:
+    """Load the API key from .env regardless of the directory being reviewed.
+
+    An already-exported OPENROUTER_API_KEY always takes precedence (load_dotenv
+    does not override existing environment variables).
+    """
+    project_env = Path(__file__).resolve().parents[2] / ".env"
+    if project_env.is_file():
+        load_dotenv(project_env)
+    load_dotenv()
+
+
 def main(argv: list[str] | None = None) -> int:
+    _load_env()
+    _configure_logging()
     config = parse_args(argv)
-    return run(config)
+    try:
+        return run(config)
+    except CommitReviewerError as exc:
+        logger.error("Error: %s", exc)
+        return 1
 
 
 if __name__ == "__main__":

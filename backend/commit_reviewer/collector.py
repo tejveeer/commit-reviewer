@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
-from .cli import CliConfig
+from .config import CliConfig
 from .errors import CollectorError
 from .models import Commit, Mode
 
