@@ -22,7 +22,7 @@ def default_web_root() -> Path:
 
 
 def write_report(report: Report, out_dir: Path) -> Path:
-    """Write ``report.json`` into ``out_dir`` (created if needed); return its path."""
+    """Write report.json into out_dir (created if needed); return its path."""
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / REPORT_FILENAME
     path.write_text(report.model_dump_json(indent=2), encoding="utf-8")
@@ -37,13 +37,13 @@ class _ReportRequestHandler(SimpleHTTPRequestHandler):
 
 
 def create_server(directory: Path, port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
-    """Build (but do not start) a static file server bound to ``directory``."""
+    """Build (but do not start) a static file server bound to the directory."""
     handler = functools.partial(_ReportRequestHandler, directory=str(directory))
     return ThreadingHTTPServer(("127.0.0.1", port), handler)
 
 
 def serve(directory: Path, port: int = DEFAULT_PORT) -> None:
-    """Serve ``directory`` on ``port`` until interrupted (Ctrl+C)."""
+    """Serve the directory on the given port until interrupted (Ctrl+C)."""
     server = create_server(directory, port)
     url = f"http://localhost:{port}/"
     logger.info("Serving report at %s (press Ctrl+C to stop)", url)

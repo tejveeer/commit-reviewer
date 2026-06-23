@@ -1,4 +1,4 @@
-"""Command-line entrypoint for ``review-commits``."""
+"""Command-line entrypoint for review-commits."""
 
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ def run(
 ) -> int:
     """Collect commits, evaluate them, write the JSON report, and serve it.
 
-    ``collector`` and ``evaluator`` can be injected for testing; by default the
+    collector and evaluator can be injected for testing; by default the
     real git collector and OpenRouter-backed evaluator are used.
     """
     repo = _repo_label(config)
@@ -156,7 +156,7 @@ def _load_env(project_root: Path | None = None) -> None:
     """Load the API key from .env regardless of the directory being reviewed.
 
     An already-exported OPENROUTER_API_KEY always takes precedence (load_dotenv
-    does not override existing environment variables). ``project_root`` is exposed
+    does not override existing environment variables). project_root is exposed
     for testing; in normal use it defaults to the repository root.
     """
     if project_root is None:

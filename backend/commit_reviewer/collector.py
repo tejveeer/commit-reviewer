@@ -26,7 +26,7 @@ class GitRunner(Protocol):
 
 
 def _default_run_git(args: list[str], cwd: Path | None = None) -> str:
-    """Run ``git`` with the given args, returning stdout or raising CollectorError."""
+    """Run git with the given args, returning stdout or raising CollectorError."""
     try:
         result = subprocess.run(
             ["git", *args],
@@ -47,7 +47,7 @@ def _default_run_git(args: list[str], cwd: Path | None = None) -> str:
 
 
 def _parse_log(output: str) -> list[Commit]:
-    """Parse delimited ``git log`` output into typed commits (pure function)."""
+    """Parse delimited git log output into typed commits (pure function)."""
     commits: list[Commit] = []
     for raw in output.split(_RECORD_SEP):
         record = raw.strip("\n")
@@ -75,7 +75,7 @@ def _parse_log(output: str) -> list[Commit]:
 
 
 class CommitCollector:
-    """Collects the most recent commits as typed :class:`Commit` objects."""
+    """Collects the most recent commits as typed Commit objects."""
 
     def __init__(self, run_git: GitRunner | None = None) -> None:
         self._run_git: GitRunner = run_git or _default_run_git
@@ -88,7 +88,7 @@ class CommitCollector:
         return self.collect_local(Path(config.target), config.count)
 
     def collect_local(self, path: Path, count: int) -> list[Commit]:
-        """Collect the most recent ``count`` commits from a local repository."""
+        """Collect the most recent N (count) commits from a local repository."""
         if not path.exists():
             raise CollectorError(f"Path does not exist: {path}")
         self._ensure_git_repo(path)
@@ -96,7 +96,7 @@ class CommitCollector:
         return _parse_log(output)
 
     def collect_remote(self, url: str, count: int) -> list[Commit]:
-        """Shallow-clone ``url`` to a temp dir and collect its recent commits."""
+        """Shallow-clone the url to a temp dir and collect its recent commits."""
         with tempfile.TemporaryDirectory(prefix="commit-reviewer-") as tmp:
             clone_dir = Path(tmp) / "repo"
             self._run_git(

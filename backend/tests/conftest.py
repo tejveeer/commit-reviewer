@@ -27,7 +27,7 @@ def _git(cwd: Path, *args: str) -> None:
 def make_git_repo(tmp_path: Path) -> GitRepoFactory:
     """Return a factory that builds a hermetic git repo with the given messages.
 
-    Commits are created oldest-first; ``git log`` therefore returns them
+    Commits are created oldest-first; git log therefore returns them
     newest-first (last message is the most recent commit).
     """
 
