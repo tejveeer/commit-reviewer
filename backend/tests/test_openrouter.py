@@ -17,7 +17,12 @@
 
     Response validation
         malformed JSON shapes (missing keys, non-string content) raise
-        EvaluatorError instead of leaking KeyError or type bugs.
+        EvaluatorError instead of leaking KeyError or type bugs, and an
+        embedded error object (HTTP 200 body) is surfaced cleanly.
+
+    Tuning
+        the outgoing payload carries the configured temperature,
+        max_tokens, and reasoning effort.
 """
 
 from __future__ import annotations
@@ -121,4 +126,47 @@ def test_non_string_content_raises() -> None:
         client.complete("sys", "usr")
 
 
+def test_embedded_error_object_is_surfaced() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"error": {"code": 502, "message": "Upstream error"}}
+        )
+
+    client = _client(httpx.MockTransport(handler))
+    with pytest.raises(EvaluatorError, match="OpenRouter error 502: Upstream error"):
+        client.complete("sys", "usr")
+
+
 # end: Response validation
+
+
+# ======================================================================
+# CATEGORY: Tuning
+# ======================================================================
+
+
+def test_payload_carries_tuning_parameters() -> None:
+    captured: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["payload"] = json.loads(request.content)
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})
+
+    client = OpenRouterClient(
+        api_key="test-key",
+        model="test-model",
+        temperature=0.2,
+        max_tokens=512,
+        reasoning_effort="low",
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    client.complete("sys", "usr")
+
+    payload = captured["payload"]
+    assert isinstance(payload, dict)
+    assert payload["temperature"] == 0.2
+    assert payload["max_tokens"] == 512
+    assert payload["reasoning"] == {"effort": "low"}
+
+
+# end: Tuning

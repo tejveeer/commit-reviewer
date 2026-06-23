@@ -19,26 +19,10 @@ logger = logging.getLogger("commit_reviewer")
 #: Called once per commit as soon as its evaluation is ready (for live output).
 ResultCallback = Callable[[int, int, Commit, Evaluation], None]
 
-#: Structured-output contract: the model MUST return exactly this JSON shape.
-RESPONSE_FORMAT: dict[str, Any] = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "commit_evaluation",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "rating": {
-                    "type": "string",
-                    "enum": [r.value for r in Rating],
-                },
-                "reasoning": {"type": "string"},
-            },
-            "required": ["rating", "reasoning"],
-            "additionalProperties": False,
-        },
-    },
-}
+#: Ask for a plain JSON object. The free provider does not reliably honor the
+#: stricter json_schema grammar for this reasoning model (it still emits invalid
+#: JSON), so json_object plus prompt + pydantic validation is more robust.
+RESPONSE_FORMAT: dict[str, Any] = {"type": "json_object"}
 
 SYSTEM_PROMPT = """\
 You are a senior engineer reviewing git commit messages. Rate the quality of a \

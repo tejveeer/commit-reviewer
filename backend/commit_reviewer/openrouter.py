@@ -34,7 +34,10 @@ class OpenRouterClient:
         api_key: str | None = None,
         model: str = OPENROUTER_MODEL,
         base_url: str = _BASE_URL,
-        timeout: float = 60.0,
+        timeout: float = 45.0,
+        temperature: float = 0.2,
+        max_tokens: int = 512,
+        reasoning_effort: str | None = "low",
         client: httpx.Client | None = None,
     ) -> None:
         key = api_key or os.environ.get(_API_KEY_ENV)
@@ -46,6 +49,9 @@ class OpenRouterClient:
         self._api_key = key
         self._model = model
         self._base_url = base_url
+        self._temperature = temperature
+        self._max_tokens = max_tokens
+        self._reasoning_effort = reasoning_effort
         self._client = client or httpx.Client(timeout=timeout)
 
     def complete(
@@ -57,7 +63,8 @@ class OpenRouterClient:
         """Send a system+user prompt and return the assistant message content."""
         payload: dict[str, Any] = {
             "model": self._model,
-            "temperature": 0,
+            "temperature": self._temperature,
+            "max_tokens": self._max_tokens,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -65,6 +72,10 @@ class OpenRouterClient:
         }
         if response_format is not None:
             payload["response_format"] = response_format
+        if self._reasoning_effort is not None:
+            # Keep the model's chain-of-thought short: less reasoning means
+            # faster responses and fewer corrupted Harmony message headers.
+            payload["reasoning"] = {"effort": self._reasoning_effort}
 
         headers = {
             "Authorization": f"Bearer {self._api_key}",
@@ -84,6 +95,17 @@ class OpenRouterClient:
             raise EvaluatorError(f"OpenRouter request failed: {exc}") from exc
 
         data = response.json()
+
+        # OpenRouter often returns HTTP 200 with an embedded error object
+        # (e.g. an upstream 502) instead of a completion; surface it cleanly.
+        if isinstance(data, dict) and data.get("error"):
+            error = data["error"]
+            if isinstance(error, dict):
+                code = error.get("code")
+                message = error.get("message")
+                raise EvaluatorError(f"OpenRouter error {code}: {message}")
+            raise EvaluatorError(f"OpenRouter error: {error!r}")
+
         try:
             content = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
