@@ -26,8 +26,8 @@ export function Filters({ filter, setFilter, search, setSearch }: FiltersProps) 
               onClick={() => setFilter(chip)}
               className={`cursor-pointer rounded-lg border px-2 py-1 text-xs font-semibold transition-colors ${
                 active
-                  ? "border-teal-500 bg-teal-500 text-white"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-teal-400 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500 dark:hover:text-teal-400"
+                  ? "border-amber-600 bg-amber-600 text-white"
+                  : "border-amber-200 bg-amber-50 text-stone-600 hover:border-amber-400 hover:text-amber-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-amber-500 dark:hover:text-amber-400"
               }`}
             >
               {label}
@@ -41,7 +41,7 @@ export function Filters({ filter, setFilter, search, setSearch }: FiltersProps) 
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search message or SHA..."
-        className="ml-auto w-full max-w-xs rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"
+        className="ml-auto w-full max-w-xs rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-sm text-stone-700 outline-none transition-colors placeholder:text-stone-400 focus:border-amber-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:placeholder:text-stone-500"
       />
     </section>
   );

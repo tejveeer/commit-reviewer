@@ -3,28 +3,15 @@
 /* Class-based dark mode: toggled by adding `dark` on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  /* Coral: complementary accent to Tailwind's built-in teal. */
-  --color-coral-50: #fff2ef;
-  --color-coral-100: #ffe2db;
-  --color-coral-200: #ffc7ba;
-  --color-coral-300: #ffa48f;
-  --color-coral-400: #fb7e64;
-  --color-coral-500: #f55f43;
-  --color-coral-600: #e34428;
-  --color-coral-700: #bd3420;
-  --color-coral-800: #9a2d1e;
-  --color-coral-900: #7f291d;
-}
-
 @layer base {
   html {
     color-scheme: light dark;
   }
 
+  /* Warm monochromatic (amber sand), intentionally low-contrast. */
   body {
-    @apply bg-slate-50 text-slate-800 antialiased;
-    @apply dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-amber-100 text-stone-700 antialiased;
+    @apply dark:bg-stone-950 dark:text-stone-200;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
   }
@@ -32,6 +19,6 @@
   /* Thin, on-brand scrollbar that fits the flat aesthetic. */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-teal-500) transparent;
+    scrollbar-color: var(--color-amber-500) transparent;
   }
 }

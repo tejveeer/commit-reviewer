@@ -6,7 +6,7 @@ export function ThemeToggle({ dark, toggle }: { dark: boolean; toggle: () => voi
       type="button"
       onClick={toggle}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="group flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-sm text-slate-600 transition-colors hover:border-teal-400 hover:text-teal-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-teal-500 dark:hover:text-teal-400"
+      className="group flex cursor-pointer items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-sm text-stone-600 transition-colors hover:border-amber-400 hover:text-amber-700 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-amber-500 dark:hover:text-amber-400"
     >
       <motion.span
         key={dark ? "moon" : "sun"}

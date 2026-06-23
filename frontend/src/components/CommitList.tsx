@@ -5,7 +5,7 @@ import { CommitRow } from "./CommitRow";
 export function CommitList({ commits }: { commits: ReviewedCommit[] }) {
   if (commits.length === 0) {
     return (
-      <p className="mx-auto max-w-5xl px-3 py-8 text-center text-sm text-slate-400 dark:text-slate-500">
+      <p className="mx-auto max-w-5xl px-3 py-8 text-center text-sm text-stone-400 dark:text-stone-500">
         No commits match the current filter.
       </p>
     );

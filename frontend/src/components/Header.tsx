@@ -23,28 +23,28 @@ export function Header({ report, dark, toggle }: HeaderProps) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="mb-4 border-b border-slate-200 bg-white/95 dark:border-slate-800 dark:bg-slate-950/95"
+      className="mb-4 border-b border-amber-300 bg-amber-100/95 dark:border-stone-800 dark:bg-stone-950/95"
     >
       <div className="mx-auto flex max-w-5xl items-start justify-between gap-2 px-3 py-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="size-2 rounded-full bg-teal-500" />
-            <span className="size-2 rounded-full bg-coral-500" />
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+            <span className="size-2 rounded-full bg-amber-500" />
+            <span className="size-2 rounded-full bg-amber-300" />
+            <h1 className="text-lg font-bold tracking-tight text-stone-800 dark:text-stone-100">
               Commit Reviewer
             </h1>
           </div>
-          <p className="mt-0.5 truncate font-mono text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 truncate font-mono text-xs text-stone-500 dark:text-stone-400">
             {report.repo}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="rounded-md border border-teal-200 bg-teal-50 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-teal-700 dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300">
+            <span className="rounded-md border border-amber-200 bg-amber-100/70 px-1.5 py-0.5 font-semibold uppercase tracking-wide text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
               {report.mode}
             </span>
-            <span className="rounded-md border border-coral-200 bg-coral-50 px-1.5 py-0.5 font-mono text-coral-700 dark:border-coral-500/30 dark:bg-coral-500/10 dark:text-coral-300">
+            <span className="rounded-md border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-stone-600 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300">
               {report.model}
             </span>
-            <span className="text-slate-400 dark:text-slate-500">
+            <span className="text-stone-400 dark:text-stone-500">
               {formatDate(report.generated_at)}
             </span>
           </div>
