@@ -11,9 +11,11 @@ Commit Reviewer reads recent git commit messages, sends them to an LLM for feedb
 
 ## Install
 
-From the project directory:
+Clone the repository and run the install script:
 
 ```bash
+git clone https://github.com/tejveeer/commit-reviewer.git
+cd commit-reviewer
 ./install.sh
 ```
 
