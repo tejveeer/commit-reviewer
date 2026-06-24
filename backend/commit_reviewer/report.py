@@ -18,6 +18,9 @@ REPORT_FILENAME = "report.json"
 
 def default_web_root() -> Path:
     """Directory served on the report port (where the built frontend lives)."""
+    bundled = Path(__file__).resolve().parent / "web"
+    if bundled.is_dir():
+        return bundled
     return Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 

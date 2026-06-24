@@ -142,6 +142,26 @@ def test_load_env_does_not_override_existing(
     assert os.environ["OPENROUTER_API_KEY"] == "preexisting"
 
 
+def test_load_env_cwd_overrides_blank_user_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    config_dir = tmp_path / "config" / "commit-reviewer"
+    config_dir.mkdir(parents=True)
+    (config_dir / ".env").write_text("OPENROUTER_API_KEY=\n")
+
+    workdir = tmp_path / "repo"
+    workdir.mkdir()
+    (workdir / ".env").write_text("OPENROUTER_API_KEY=from-cwd\n")
+    monkeypatch.chdir(workdir)
+    monkeypatch.setattr(cli, "_user_config_dir", lambda: config_dir)
+
+    cli._load_env(project_root=tmp_path / "missing-project")
+    import os
+
+    assert os.environ["OPENROUTER_API_KEY"] == "from-cwd"
+
+
 # end: Env loading (regression)
 
 

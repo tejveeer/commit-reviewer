@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 from pathlib import Path
-
-from dotenv import load_dotenv
 
 from . import DEFAULT_COMMIT_COUNT, DEFAULT_PORT, OPENROUTER_MODEL, __version__, console
 from .collector import CommitCollector
@@ -191,19 +190,57 @@ def _configure_logging(log_file: Path) -> None:
     root.addHandler(file_handler)
 
 
+def _user_config_dir() -> Path:
+    xdg = os.environ.get("XDG_CONFIG_HOME")
+    if xdg:
+        return Path(xdg) / "commit-reviewer"
+    return Path.home() / ".config" / "commit-reviewer"
+
+
+def _parse_env_file(path: Path) -> dict[str, str]:
+    """Read non-empty KEY=VALUE pairs from a dotenv file."""
+    values: dict[str, str] = {}
+    if not path.is_file():
+        return values
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        key, sep, raw = line.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        value = raw.strip().strip('"').strip("'")
+        if value:
+            values[key] = value
+    return values
+
+
 def _load_env(project_root: Path | None = None) -> None:
     """Load the API key from .env regardless of the directory being reviewed.
 
-    An already-exported OPENROUTER_API_KEY always takes precedence (load_dotenv
-    does not override existing environment variables). project_root is exposed
-    for testing; in normal use it defaults to the repository root.
+    An already-exported OPENROUTER_API_KEY always takes precedence. project_root
+    is exposed for testing; in normal use it defaults to the repository root.
+
+    When installed globally, ``~/.config/commit-reviewer/.env`` is the fallback;
+    a project or working-directory ``.env`` overrides it. Blank values are ignored
+    so an empty global config does not block a local ``.env``.
     """
     if project_root is None:
         project_root = Path(__file__).resolve().parents[2]
-    project_env = project_root / ".env"
-    if project_env.is_file():
-        load_dotenv(project_env)
-    load_dotenv()
+    layers = [
+        _user_config_dir() / ".env",
+        project_root / ".env",
+        Path.cwd() / ".env",
+    ]
+    merged: dict[str, str] = {}
+    for path in layers:
+        merged.update(_parse_env_file(path))
+    for key, value in merged.items():
+        if not os.environ.get(key):
+            os.environ[key] = value
 
 
 def main(argv: list[str] | None = None) -> int:

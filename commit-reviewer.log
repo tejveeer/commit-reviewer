@@ -1,0 +1,32 @@
+2026-06-23 21:39:33,252 INFO commit_reviewer: Reviewing up to 10 commit(s) from /home/tejveeer/Desktop/commit-reviewer [local]
+2026-06-23 21:39:33,257 ERROR commit_reviewer: Error: OPENROUTER_API_KEY is not set. Add it to your environment or a .env file (see .env.example).
+2026-06-23 21:43:32,289 INFO commit_reviewer: Reviewing up to 10 commit(s) from /home/tejveeer/Desktop/commit-reviewer [local]
+2026-06-23 21:43:33,018 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:01,249 INFO commit_reviewer: Reviewing up to 10 commit(s) from /home/tejveeer/Desktop/commit-reviewer [local]
+2026-06-23 21:47:02,151 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:06,522 INFO commit_reviewer: [1/10] 992a3b9  GOOD       (5.21s)  The message conveys what was changed and why (improving speed), but uses past tense instead of the recommended imperative mood and could be clearer about the specific parameters adjusted.
+2026-06-23 21:47:07,043 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:07,444 WARNING commit_reviewer: Evaluation attempt 1 for 10d97da failed (OpenRouter error 502: Upstream error from OpenInference: could not decode header); retrying in 0.5s
+2026-06-23 21:47:08,623 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:13,951 INFO commit_reviewer: [2/10] 10d97da  GOOD       (7.43s)  The message conveys the change (improving terminal formatting) but uses a past‑tense verb instead of the imperative mood and lacks detail on why the change was made.
+2026-06-23 21:47:15,533 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:23,624 INFO commit_reviewer: [3/10] 4d98baa  BAD        (9.67s)  The message is vague and not in imperative mood; it provides no clear description of what changed or why, making it unhelpful for future readers.
+2026-06-23 21:47:24,340 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:28,740 INFO commit_reviewer: [4/10] 37ed6eb  BAD        (5.12s)  The message is vague, contains a typo ('iteation'), and does not clearly describe what was changed or why.
+2026-06-23 21:47:29,625 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:32,166 WARNING commit_reviewer: Evaluation attempt 1 for b602316 failed (OpenRouter content was not text: None); retrying in 0.5s
+2026-06-23 21:47:33,333 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:38,062 INFO commit_reviewer: [5/10] b602316  GOOD       (9.32s)  The message conveys the general purpose (initial frontend work) but is vague and not in imperative mood, lacking detail on what was added or why.
+2026-06-23 21:47:38,675 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:41,850 INFO commit_reviewer: [6/10] 62b78a8  GOOD       (3.79s)  The message is clear and uses the imperative mood, but it could be slightly more specific about which files or why the formatting was unnecessary.
+2026-06-23 21:47:42,549 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:48,255 INFO commit_reviewer: [7/10] 44863da  GOOD       (6.41s)  The message is clear and uses the imperative mood, indicating what was added, but it lacks detail on why the tests were added or which services are affected.
+2026-06-23 21:47:49,019 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:52,194 INFO commit_reviewer: [8/10] dbaad56  BAD        (3.94s)  The message is vague and not in imperative mood; it doesn't explain what was changed or why, providing little useful context.
+2026-06-23 21:47:52,691 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:47:56,494 INFO commit_reviewer: [9/10] b8c5d5d  GOOD       (4.30s)  The subject is clear and in imperative mood, but it lacks detail about what the collector does or why the change was needed.
+2026-06-23 21:47:56,892 INFO httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-23 21:48:01,921 INFO commit_reviewer: [10/10] 97f3f7c  GOOD       (5.43s)  The message is concise and indicates the purpose (setting up initial scaffolding), but it lacks detail about what was added and uses a noun phrase rather than a clear imperative description.
+2026-06-23 21:48:01,923 INFO commit_reviewer: Wrote /home/tejveeer/Desktop/commit-reviewer/backend/commit_reviewer/web/report.json (excellent=0, good=7, bad=3)
+2026-06-23 21:48:01,982 INFO commit_reviewer: Serving report at http://localhost:3546/ (press Ctrl+C to stop)
+2026-06-23 21:48:57,110 INFO commit_reviewer: Shutting down report server.

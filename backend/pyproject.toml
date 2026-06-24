@@ -28,6 +28,9 @@ review-commits = "commit_reviewer.cli:main"
 where = ["."]
 include = ["commit_reviewer*"]
 
+[tool.setuptools.package-data]
+commit_reviewer = ["web/**/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
