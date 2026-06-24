@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Install commit-reviewer globally under ~/.local (no shell venv activation).
+# Install commit-reviewer via Docker (wrapper under ~/.local/bin).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/commit-reviewer"
-VENV="$INSTALL_ROOT/venv"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/commit-reviewer"
-WEB_DST="$ROOT/backend/commit_reviewer/web"
+IMAGE="commit-reviewer:latest"
 
 info() { printf '==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
@@ -62,44 +61,75 @@ configure_api_key() {
   info "Saved API key to $CONFIG_DIR/.env"
 }
 
-need_cmd python3
-need_cmd npm
+need_cmd docker
+if ! docker info >/dev/null 2>&1; then
+  die "Docker is installed but the daemon is not running. Start Docker and try again."
+fi
 
-PYTHON_VERSION="$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')"
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' \
-  || die "Python 3.10+ is required (found $PYTHON_VERSION)"
-
-info "Building frontend"
-(
-  cd "$ROOT/frontend"
-  if [[ -f package-lock.json ]]; then
-    npm ci
-  else
-    npm install
-  fi
-  npm run build
-)
-
-info "Bundling web assets into the Python package"
-rm -rf "$WEB_DST"
-cp -a "$ROOT/frontend/dist" "$WEB_DST"
-
-info "Creating isolated environment at $VENV"
-mkdir -p "$INSTALL_ROOT"
-python3 -m venv "$VENV"
-"$VENV/bin/pip" install --upgrade pip wheel
-"$VENV/bin/pip" install "$ROOT/backend"
+info "Building Docker image ($IMAGE)"
+docker build -t "$IMAGE" "$ROOT"
 
 info "Installing command-line wrappers"
-mkdir -p "$BIN_DIR"
-cat >"$BIN_DIR/review-commits" <<EOF
+mkdir -p "$INSTALL_ROOT" "$BIN_DIR" "$CONFIG_DIR"
+printf '%s\n' "$IMAGE" >"$INSTALL_ROOT/image"
+
+cat >"$BIN_DIR/review-commits" <<'EOF'
 #!/usr/bin/env bash
-exec "$VENV/bin/review-commits" "\$@"
+set -euo pipefail
+
+INSTALL_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/commit-reviewer"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/commit-reviewer"
+ENV_FILE="$CONFIG_DIR/.env"
+IMAGE_FILE="$INSTALL_ROOT/image"
+IMAGE="commit-reviewer:latest"
+
+if [[ -f "$IMAGE_FILE" ]]; then
+  IMAGE="$(tr -d '[:space:]' <"$IMAGE_FILE")"
+fi
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  printf 'error: Missing %s — run install.sh first.\n' "$ENV_FILE" >&2
+  exit 1
+fi
+
+PORT=3546
+NO_SERVE=0
+args=("$@")
+i=0
+while (( i < ${#args[@]} )); do
+  arg="${args[$i]}"
+  case "$arg" in
+    --port)
+      ((i++))
+      PORT="${args[$i]:-3546}"
+      ;;
+    --port=*)
+      PORT="${arg#*=}"
+      ;;
+    --no-serve)
+      NO_SERVE=1
+      ;;
+  esac
+  ((i++))
+done
+
+docker_args=(
+  run --rm -it
+  --env-file "$ENV_FILE"
+  -e COMMIT_REVIEWER_HOST=0.0.0.0
+  -v "$(pwd):$(pwd)"
+  -w "$(pwd)"
+)
+
+if [[ "$NO_SERVE" -eq 0 ]]; then
+  docker_args+=(-p "${PORT}:${PORT}")
+fi
+
+exec docker "${docker_args[@]}" "$IMAGE" "$@"
 EOF
 chmod +x "$BIN_DIR/review-commits"
 ln -sf review-commits "$BIN_DIR/commit-reviewer"
 
-mkdir -p "$CONFIG_DIR"
 configure_api_key
 
 if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then

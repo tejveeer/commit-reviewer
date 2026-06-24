@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -39,10 +40,15 @@ class _ReportRequestHandler(SimpleHTTPRequestHandler):
         logger.debug("%s - %s", self.address_string(), format % args)
 
 
+def _bind_host() -> str:
+    """Host address for the report server (127.0.0.1 locally, 0.0.0.0 in Docker)."""
+    return os.environ.get("COMMIT_REVIEWER_HOST", "127.0.0.1")
+
+
 def create_server(directory: Path, port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
     """Build (but do not start) a static file server bound to the directory."""
     handler = functools.partial(_ReportRequestHandler, directory=str(directory))
-    return ThreadingHTTPServer(("127.0.0.1", port), handler)
+    return ThreadingHTTPServer((_bind_host(), port), handler)
 
 
 def serve(directory: Path, port: int = DEFAULT_PORT) -> None:

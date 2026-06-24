@@ -6,20 +6,23 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/commit-reviewer"
 BIN_DIR="${XDG_BIN_HOME:-$HOME/.local/bin}"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/commit-reviewer"
-WEB_DST="$ROOT/backend/commit_reviewer/web"
+IMAGE="commit-reviewer:latest"
 
 info() { printf '==> %s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
 
 PURGE=0
+REMOVE_IMAGE=0
 for arg in "$@"; do
   case "$arg" in
     --purge) PURGE=1 ;;
+    --remove-image) REMOVE_IMAGE=1 ;;
     -h|--help)
       cat <<EOF
-Usage: $(basename "$0") [--purge]
+Usage: $(basename "$0") [--purge] [--remove-image]
 
-  --purge  Also remove $CONFIG_DIR (API key and settings)
+  --purge         Also remove $CONFIG_DIR (API key and settings)
+  --remove-image  Also remove the Docker image ($IMAGE)
 EOF
       exit 0
       ;;
@@ -46,9 +49,14 @@ for cmd in review-commits commit-reviewer; do
   fi
 done
 
-if [[ -d "$WEB_DST" ]]; then
-  info "Removing bundled web assets from source tree"
-  rm -rf "$WEB_DST"
+if [[ "$REMOVE_IMAGE" -eq 1 ]]; then
+  if command -v docker >/dev/null 2>&1 && docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    info "Removing Docker image $IMAGE"
+    docker rmi "$IMAGE"
+    removed=1
+  else
+    warn "Docker image $IMAGE not found — skipping"
+  fi
 fi
 
 if [[ "$PURGE" -eq 1 && -d "$CONFIG_DIR" ]]; then
